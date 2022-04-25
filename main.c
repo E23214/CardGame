@@ -31,7 +31,7 @@ int main(void){
   FILE* read;
   
 
-  read = fopen("deck.txt", "r");
+  read = fopen("../deck.txt", "r");
   //while(match(play) == 0){
 
   
