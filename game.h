@@ -1,5 +1,4 @@
 //File for functions related to the state of the game
-
 #ifndef game_h
 #define game_h
 #include "cardFun.h"
@@ -29,7 +28,8 @@ void dividePot(int numPlayers, player play[], int pot, stats* ga) {
   for (i = 0; i < numPlayers; i++) {//divies up the pot
     if (playMax[i] != 0) {
       play[i].money += (pot / winners);
-      printf("Player %d money: %d\n", i+1, play[i].money);
+      printf("Player %d's money: %d\n", i+1, play[i].money);
+      printf("Player %d's money: %d\n", ((i+1)%2)+1, play[(i+1)%2].money);
       ga->won[i]+=1;// updates who won a round
     }
   }
@@ -38,7 +38,7 @@ void dividePot(int numPlayers, player play[], int pot, stats* ga) {
 
 int handValue(player p) {
   int i;
-  int suit[4] {0,0,0,0}; //0 = spades, 1 = hearts, 2 = diamonds, 3 = clubs
+  int suit[4] = {0,0,0,0}; //0 = spades, 1 = hearts, 2 = diamonds, 3 = clubs
   int value = 0;
 
   if (p.c[0].value == p.c[1].value && p.c[1].value == p.c[2].value) {
@@ -120,7 +120,7 @@ int match(player p[], int numP){//checks if players still have money. NumP relic
 return 0;
 }
 int bet(player p[], int t, int pot){
-  int bet[2] {0,0};
+  int bet[2] = {0,0};
   char rc; // checks what the player wants to do. raise, call, fold, or go all in if previous bet is over the money in their account
   int i = t;
   printf("Player %d would you like to bet or fold (b/f):\n", i+1);
@@ -131,70 +131,53 @@ int bet(player p[], int t, int pot){
     printf("Player %d has folded\n", i + 1);
   }
   else {
-    printf("Player %d enter your bet:", i+1);
+    printf("Player %d enter your (non-zero) bet:\n", i+1);
     scanf("%d", &bet[i]);
-    p[i].money = p[i].money - bet[i];
+    while(bet[i] == 0){
+      printf("Okay, very funny. Enter a non-zero bet:\n");
+      scanf("%d", &bet[i]);
+    }
     while(p[i].money < 0){
       p[i].money = p[i].money + bet[i];
       printf("You have $%d, you can't bet over that amount", p[i].money);
       printf("\n How much do you want to bet?");
       scanf("%d", &bet[i]);
-      p[i].money -= bet[i];
     }
       i+=1;
       i=i%2;
-      if(bet[((i+1)%2)] > p[i].money){
+      if(bet[((i+1)%2)] >= p[i].money){
         printf("All in or fold? (a/f)");
         scanf("%*c");
         scanf("%c", &rc);
-        printf("%c", rc);
       }
       else{
         printf("Player %d raise, call, or fold? (r/c/f): \n", i + 1);
         scanf("%*c");
         scanf("%c", &rc);
         if(rc == 'r') {
-          printf("bet0 = %d bet1 = %d\n", bet[0], bet[1]);
-          if(i == 1){
-            printf("i = %d\n", i);
-            printf("What is the new bet? (Greater than %d):", bet[i-1]);
-          }
-          if(i == 0){
-            printf("What is the new bet? (Greater than %d):", bet[i+1]);
-          }
-          scanf("%d", &bet[i]);
-      
-          p[i].money -= bet[i];
-            
-          while(p[i].money < 0){
-            p[i].money = p[i].money + bet[i];
-            printf("You have $%d, you can't bet over that amount", p[i].money);
-            printf("\n How much do you want to raise by?");
+           printf("Player %d enter your new bet (greater than %d):\n", i+1, bet[(i+1)%2]);
             scanf("%d", &bet[i]);
-            p[i].money -= bet[i];
+          while(p[i].money < bet[i] || bet[i] <= bet[(i+1)%2]){ // protecting player from betting over their money or not raising
+            if(p[i].money < bet[i]){
+              printf("You have $%d, you can't bet over that amount", p[i].money);
+              printf("\n How much do you want to raise by?");
+             scanf("%d", &bet[i]);
+            }
+            if(bet[i] <= bet[(i+1)%2]){
+              printf("Okay, very funny. Enter a greater bet:\n");
+              scanf("%d", &bet[i]);
+            }
           }
-          pot += bet[i];
         }
       }
       if(rc == 'c'){
-        if(i == 1){
-          bet[i] = bet[i-1];
-        }
-        if(i == 0){
-          bet[i] = bet[i + 1];
-        }
-        p[i].money = p[i].money - bet[i];
+        bet[i] = bet[(i+1)%2];
       }
       if (rc == 'f') {
         p[i].s = 'f';
-        return pot;
       }
       if(rc == 'a'){
-        printf("\n1");
         bet[i] = p[i].money;
-        p[i].money = 0;
-        pot += (bet[0] + bet[1]);
-        return pot;
       }
  
     while(bet[1] != bet[0] && rc != 'a' && p[i].s != 'f'){  
@@ -210,15 +193,16 @@ int bet(player p[], int t, int pot){
         if(i == 0){
           bet[i] = bet[i + 1];
         }
-        p[i].money = p[i].money - bet[i];
+        
       }
       if (rc == 'f') {
         p[i].s = 'f';
-        return pot;
       }
     }
+    p[1].money = p[1].money - bet[1];
+    p[0].money = p[0].money - bet[0];
     pot += (bet[1] + bet[0]);
-    printf("Pot:%d\n", pot);
+    printf("Pot:%d\n", pot);//here to check for bugs and useful for the player to have
   }
   return pot;
 }
@@ -229,7 +213,7 @@ stats initStats(stats g){// initailizes the stats to zero and returns the variab
   g.won[0] = 0;
   g.won[1] = 1;
 
-  g.rounds = 0;
+  g.games = 0;
 
   return g;
 }

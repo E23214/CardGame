@@ -10,16 +10,15 @@ typedef struct card_s{
 } card;
 
 typedef struct player_s{
-  int money = 100;
+  int money;
   char s;
   card c[4];
 } player;
 
 typedef struct stats_s{
-  int rounds;
+  int games;
   int won[2];
   int score[31];
-  
 }stats;
-
+ 
 #endif
